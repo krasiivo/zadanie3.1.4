@@ -136,4 +136,9 @@ public class UserServiceImpl implements UserService {
         Optional<User> foundUser = userRepository.findById(id);
         return foundUser.orElseThrow(UserNotFoundException::new);
     }
+
+    @Override
+    public User findByUserEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 }

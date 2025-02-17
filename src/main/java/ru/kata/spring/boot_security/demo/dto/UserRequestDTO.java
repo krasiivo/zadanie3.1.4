@@ -24,6 +24,8 @@ public class UserRequestDTO {
     @Min(value = 0, message = "Введите корректный возраст")
     private Integer age;
 
+    private Set<Role> roles = new HashSet<>();
+
     public Long getId() {
         return id;
     }
@@ -31,8 +33,6 @@ public class UserRequestDTO {
     public void setId(Long id) {
         this.id = id;
     }
-
-    private Set<Role> roles = new HashSet<>();
 
     public String getUsername() {
         return username;

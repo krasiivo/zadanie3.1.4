@@ -1,8 +1,8 @@
 CREATE TABLE users
 (
     id       BIGINT AUTO_INCREMENT,
-    username VARCHAR(100) NOT NULL,
-    password VARCHAR(80)  NOT NULL,
+    username VARCHAR(100),
+    password VARCHAR(80),
     email    VARCHAR(50) UNIQUE,
     age      INT,
     PRIMARY KEY (id)
