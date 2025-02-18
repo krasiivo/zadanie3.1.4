@@ -9,7 +9,6 @@ async function fetchUserData(url) {
         displayUserData(user);
     } catch (error) {
         console.error('Ошибка', error);
-        document.getElementById('user-table-body').innerHTML = '<tr><td colspan="4" class="text-danger">Error</td></tr>';
     }
 }
 
@@ -35,3 +34,5 @@ function displayUserData(user) {
 (async () => {
     await fetchUserData("/api/v1/user");
 })();
+
+

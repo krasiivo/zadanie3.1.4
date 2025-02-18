@@ -39,7 +39,7 @@ public class PasswordValidator implements Validator {
 
     private void validateUsername(String username, Errors errors) {
         if (userRepository.findByName(username).isPresent()) {
-            errors.rejectValue("username", "", "Имя уже занято. Пожалуйста, выберите другое");
+            errors.rejectValue("username", "", "Имя уже занято");
         }
     }
 

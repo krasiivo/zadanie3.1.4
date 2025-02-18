@@ -1,8 +1,8 @@
 CREATE TABLE users
 (
     id       BIGINT AUTO_INCREMENT,
-    username VARCHAR(100),
-    password VARCHAR(80),
+    username VARCHAR(100) NOT NULL,
+    password VARCHAR(80)  NOT NULL,
     email    VARCHAR(50) UNIQUE,
     age      INT,
     PRIMARY KEY (id)
@@ -35,7 +35,6 @@ VALUES ('user1', '$2a$12$l1ZREZH/Qo24CvQXmJ3shujNSB2UussLcFcj9ObcomShAheCnPETa',
 
 
 INSERT INTO users_roles (user_id, role_id)
-VALUES (1, 1),
-       (1, 2),
+VALUES (1, 2),
        (2, 2),
        (3, 1);

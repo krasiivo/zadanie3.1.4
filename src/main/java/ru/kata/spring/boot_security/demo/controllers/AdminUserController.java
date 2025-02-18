@@ -20,8 +20,9 @@ import ru.kata.spring.boot_security.demo.util.exceptions.UserNotUpdatedException
 import ru.kata.spring.boot_security.demo.validation.PasswordValidator;
 
 import javax.validation.Valid;
-import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -109,8 +110,8 @@ public class AdminUserController {
     }
 
     @GetMapping("/user")
-    public User getAuthorisedUser(@AuthenticationPrincipal User user) {
-        return userService.findByName(user.getUsername()).get();
+    public UserResponseDTO getAuthorisedUser(@AuthenticationPrincipal User user) {
+        return convertToUserResponseDTO(userService.findByName(user.getUsername()).get());
     }
 
     @GetMapping("/roles")

@@ -2,49 +2,124 @@ document.addEventListener('DOMContentLoaded', function () {
     loadUsers();
 });
 
-
+//Загрузка пользователей
 async function loadUsers() {
     try {
         const response = await fetch('/api/v1/users');
         if (!response.ok) {
-            throw new Error('Что-то не так с ответом сервера: ' + response.statusText);
+            throw new Error('Ошибка сервера: ' + response.statusText);
         }
         const users = await response.json();
-        const userTableBody = document.getElementById('userTableBody');
-        userTableBody.innerHTML = '';
-
-        users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${user.id}</td>
-                <td>${user.username}</td>
-                <td>${user.age}</td>
-                <td>${user.email}</td>
-                <td>${user.roles ? user.roles.map(role => role.name).join(', ') : 'Не указано'}</td>
-                <td><button class="btn btn-info" onclick="editUser(${user.id})">Edit</button></td>
-                <td><button class="btn btn-danger" onclick="showDeleteModal(${user.id})">Delete</button></td>
-            `;
-            userTableBody.appendChild(row);
-        });
+        renderUserTable(users);
     } catch (error) {
-        console.error('Ошибка при извлечении пользователей:', error);
+        handleFetchError(error);
     }
 }
 
-async function loadRoles() {
+//Получение текущего пользователя
+async function fetchCurrentUser() {
+    const response = await fetch('/api/v1/user');
+    if (response.ok) {
+        const userData = await response.json();
+        return userData.id;  // Где id - это идентификатор пользователя
+    }
+    throw new Error('Ошибка при получении текущего пользователя');
+}
+
+//Сохранение ID текущего пользователя
+let currentUserId;
+
+fetchCurrentUser()
+    .then(id => {
+        currentUserId = id;
+        console.log(`Current User ID: ${currentUserId}`);
+        loadUsers();
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+//Добавление строк в таблицу
+function renderUserTable(users) {
+    const userTableBody = document.getElementById('userTableBody');
+    userTableBody.innerHTML = '';
+
+    users.forEach(user => {
+        userTableBody.appendChild(createUserRow(user));
+    });
+}
+
+//Создание строк таблицы
+function createUserRow(user) {
+    const row = document.createElement('tr');
+    const isCurrentUser = user.id === currentUserId;
+
+    row.innerHTML = `
+        <td>${user.id}</td>
+        <td>${user.username}</td>
+        <td>${user.age}</td>
+        <td>${user.email}</td>
+        <td>${user.roles ? user.roles.map(role => role.name).join(', ') : ''}</td>
+        <td>
+            <button class="btn btn-info"${isCurrentUser ? ' disabled' : ''} 
+            style="${isCurrentUser ? 'background-color: grey; border-color: grey;' : ''}" 
+            onclick="${isCurrentUser ? '' : `editUser(${user.id})`}">Edit</button>
+        </td>
+        <td>
+            <button class="btn btn-danger"${isCurrentUser ? ' disabled' : ''} 
+            style="${isCurrentUser ? 'background-color: grey; border-color: grey;' : ''}" 
+            onclick="${isCurrentUser ? '' : `showDeleteModal(${user.id})`}">Delete</button>
+        </td>
+    `;
+    return row;
+}
+
+//Обработка исключений
+function handleFetchError(error) {
+    console.error(error);
+    showNotification(error.message);
+}
+
+function showNotification(message) {
+    const notificationContainer = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+
+    notification.style.backgroundColor = '#f8d7da';
+    notification.style.color = '#721c24';
+    notification.style.border = '1px solid #f5c6cb';
+    notification.style.padding = '15px';
+    notification.style.margin = '10px 0';
+    notification.style.borderRadius = '5px';
+
+    notificationContainer.appendChild(notification);
+
+    // Удаление уведомления через 5 секунд
+    setTimeout(() => {
+        notificationContainer.removeChild(notification);
+    }, 5000);
+}
+
+//Получение ролей из БД
+async function loadRoles(apiUrl = '/api/v1/roles') {
     try {
-        const rolesResponse = await fetch(`/api/v1/roles`);
+        const rolesResponse = await fetch(apiUrl);
+
         if (!rolesResponse.ok) {
-            throw new Error('Ошибка при извлечении ролей');
+            throw new Error(`Ошибка ${rolesResponse.status}: ${rolesResponse.statusText}`);
         }
+
         return await rolesResponse.json();
     } catch (error) {
-        console.error('Ошибка при загрузке ролей:', error);
+        console.error('Ошибка при загрузке ролей:', error.message);
         return [];
     }
 }
 
+//Отправка данных о пользователя для заполнения формы Edit
 async function editUser(userId) {
+    //Обработка исключений
     try {
         const response = await fetch(`/api/v1/users/${userId}`);
         if (!response.ok) {
@@ -77,7 +152,7 @@ async function editUser(userId) {
 }
 
 document.getElementById('editUserForm').addEventListener('submit', async (event) => {
-    console.log('Form submitted');
+    console.log('Форма отправлена');
     event.preventDefault();
 
     const userId = document.getElementById('editUserID').value;
@@ -91,6 +166,7 @@ document.getElementById('editUserForm').addEventListener('submit', async (event)
 
     console.log(userData)
 
+    //Обработка исключений
     try {
         const response = await fetch(`/api/v1/users/${userId}`, {
             method: 'PATCH',
@@ -101,34 +177,34 @@ document.getElementById('editUserForm').addEventListener('submit', async (event)
         });
 
         let responseText = await response.text();
-        console.log('Response Text:', responseText);
+        console.log('Ответ:', responseText);
 
         if (!response.ok) {
             const invalidUser = JSON.parse(responseText)
-            console.log('Parsed invalidUser:', invalidUser);
-            console.log(invalidUser)
-            document.getElementById('editIDError').innerText = invalidUser.idError
-            document.getElementById('editNameError').innerText = invalidUser.nameError
-            document.getElementById('editAgeError').innerText = invalidUser.ageError
-            document.getElementById("editEmailError").innerText = invalidUser.emailError
-            document.getElementById("editPasswordError").innerText = invalidUser.passwordError
-            document.getElementById("editRolesError").innerText = invalidUser.rolesError
-            throw new Error('Failed to update user');
+            showErrorNotification(invalidUser.message);
+            return;
         }
-        document.getElementById('editNameError').innerText = ""
-        document.getElementById('editAgeError').innerText = ""
-        document.getElementById("editEmailError").innerText = ""
-        document.getElementById("editPasswordError").innerText = ""
-        document.getElementById("editRolesError").innerText = ""
+
         const updatedUser = JSON.parse(responseText);
-        console.log('User updated successfully:', updatedUser);
+        console.log('Пользователь обнавлен:', updatedUser);
         await loadUsers();
         const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
         if (editModal) {
             editModal.hide();
         }
     } catch (error) {
-        console.error('Error updating user:', error);
+        console.error('Ошибка при обновлении пользователя:', error);
+        showErrorNotification('Произошла ошибка при обновлении пользователя')
+    }
+
+    function showErrorNotification(message) {
+        const errorDiv = document.getElementById('errorEditNotification');
+        errorDiv.innerText = message;
+        errorDiv.style.display = 'block';
+
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 10000);
     }
 });
 
@@ -178,10 +254,11 @@ async function deleteUser(userId) {
             throw new Error('Не удалось удалить пользователя');
         }
     } catch (error) {
-        console.error('Ошибка удаления пользователя:', error);
+        console.error('Ошибка при удалении пользователя:', error);
     }
 }
 
+//Добавление пользователя
 async function addUser() {
 
     const userData = {
@@ -194,8 +271,8 @@ async function addUser() {
 
     console.log(userData)
 
+    //Обработка исключений
     try {
-
         const response = await fetch(`/api/v1/users`, {
             method: 'POST',
             headers: {
@@ -205,31 +282,33 @@ async function addUser() {
         });
 
         let responseText = await response.text();
-        console.log('Response Text:', responseText);
+        console.log('Ответ:', responseText);
 
         if (!response.ok) {
-            const invalidUser = JSON.parse(responseText)
-            console.log(invalidUser)
-            document.getElementById('addNameError').innerText = invalidUser.nameError
-            document.getElementById('addAgeError').innerText = invalidUser.ageError
-            document.getElementById("addEmailError").innerText = invalidUser.emailError
-            document.getElementById("addPasswordError").innerText = invalidUser.passwordError
-            document.getElementById("addRolesError").innerText = invalidUser.rolesError
-            throw new Error('Failed to add user');
+            const invalidUser = JSON.parse(responseText);
+            showErrorNotification(invalidUser.message);
+            return;
         }
-        document.getElementById('addNameError').innerText = ""
-        document.getElementById('addAgeError').innerText = ""
-        document.getElementById("addEmailError").innerText = ""
-        document.getElementById("addPasswordError").innerText = ""
-        document.getElementById("addRolesError").innerText = ""
+
         const newUser = JSON.parse(responseText);
-        console.log('User added successfully:', newUser);
+        console.log('Пользователь добавлен:', newUser);
         await loadUsers();
         document.getElementById('addUserForm').reset();
         const allUsersTab = new bootstrap.Tab(document.getElementById('nav-home-tab'));
         allUsersTab.show();
     } catch (error) {
-        console.error('Error adding user:', error);
+        console.error('Ошибка при добавлении пользователя:', error);
+        showErrorNotification('Произошла ошибка при добавлении пользователя');
+    }
+
+    function showErrorNotification(message) {
+        const errorDiv = document.getElementById('errorAddNotification');
+        errorDiv.innerText = message;
+        errorDiv.style.display = 'block';
+
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 10000);
     }
 }
 
@@ -246,14 +325,9 @@ async function initializeRoles() {
     });
 }
 
-
 document.getElementById('addUserForm').addEventListener('submit', async (event) => {
-    console.log('Add user form submitted');
+    console.log('Данные с формы отправлены');
     event.preventDefault();
     await addUser();
 });
 document.addEventListener('DOMContentLoaded', initializeRoles);
-
-(async () => {
-    await fetchUserData("/api/v1/user");
-})();
