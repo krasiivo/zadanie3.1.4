@@ -204,7 +204,7 @@ document.getElementById('editUserForm').addEventListener('submit', async (event)
 
         setTimeout(() => {
             errorDiv.style.display = 'none';
-        }, 10000);
+        }, 5000);
     }
 });
 
@@ -308,7 +308,7 @@ async function addUser() {
 
         setTimeout(() => {
             errorDiv.style.display = 'none';
-        }, 10000);
+        }, 5000);
     }
 }
 
