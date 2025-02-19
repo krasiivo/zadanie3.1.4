@@ -12,17 +12,17 @@ import java.util.Optional;
 public interface UserService extends UserDetailsService {
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
+    UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
 
-    public List<User> findAll();
+    List<User> findAll();
 
-    public User getUserById(long id);
+    User getUserById(long id);
 
-    public void save(User user);
+    void save(User user);
 
-    public void deleteById(long id);
+    void deleteById(long id);
 
-    public Optional<User> findByName(String name);
+    Optional<User> findByName(String name);
 
     void updateUser(User user);
 

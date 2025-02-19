@@ -21,7 +21,7 @@ async function fetchCurrentUser() {
     const response = await fetch('/api/v1/user');
     if (response.ok) {
         const userData = await response.json();
-        return userData.id;  // Где id - это идентификатор пользователя
+        return userData.id;
     }
     throw new Error('Ошибка при получении текущего пользователя');
 }
